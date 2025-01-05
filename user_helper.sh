@@ -1,16 +1,17 @@
 #!/bin/bash
 
-options=("Add User" "Delete User" "Add Group" "Delete Group" "List User Details" "Change User Password" "Lock Account" "Unlock Account" "Disable Account" "Update Username" "Exit" )
+options=("Get Current User" "List All Users" "List User Details" "Add User" "Delete User" "Update Username" "Change User Password" "Lock Account" "Unlock Account" "Disable Account" "Add Group" "Delete Group" "Exit" )
 
 
 while true; do
 
     choice=$(zenity --list \
-        --title="System Admin helper tool" \
-        --column="Options" "${options[@]}" \
-        --width=400 \
-        --height=400 \
-    --auto-scroll)
+        --title="User helper tool" \
+        --text="Select an option:" \
+        --column="" "${options[@]}" --hide-header \
+        --width=300 \
+        --height=410 \
+        --auto-scroll)
 
 
     if [[ $? -ne 0 ]]; then
@@ -22,6 +23,25 @@ while true; do
 
 
     case $choice in
+        "Get Current User")
+            if whoami 2>/dev/null; then
+                zenity --info --text="Current User:\n $(whoami)"
+            else
+                zenity --error --title="Error" --text="Failed to get current user"
+            fi
+        ;;
+        "List All Users")
+            users=($(cut -d: -f1 /etc/passwd))
+            if [[ $? -eq 0 ]]; then
+                if cut -d: -f1 /etc/passwd 2>/dev/null; then
+                    zenity --list --title="System Users" --text="Current Users:" --hide-header --column="Users" "${users[@]}" --width=200 --height=400 --auto-scroll
+                else
+                    zenity --error --title="Error" --text="Failed to get current user"
+                fi
+            else
+                echo "Operation canceled."
+            fi
+            ;;
         "Add User")
             username=$(zenity --entry --title="Add User" --text="Enter username:")
             if [[ $? -eq 0 ]]; then
@@ -73,8 +93,8 @@ while true; do
         "List User Details")
             username=$(zenity --entry --title="List user details" --text="Enter username to list its details:")
             if [[ $? -eq 0 ]]; then
-                if sudo id $username 1>user-details 2>/dev/null; then
-                    zenity --info --title="User $username details" --text="$(cat user-details) ."
+                if sudo id $username 2>/dev/null; then
+                    zenity --info --title="User $username details" --text="$(sudo id $username) ."
                 else
                     zenity --error --title="Error" --text="Failed to list detail for $username. Please check if the user exists or try again later."
                 fi
